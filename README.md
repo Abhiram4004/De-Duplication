@@ -13,70 +13,58 @@ When importing large price lists from different vendors or regions, duplicate en
 - Export cleaned datasets and comprehensive audit logs.
 
 ## Technology Stack
-- **Frontend**: React 18, Vite, React Router, Tailwind CSS, Recharts, Lucide Icons
-- **Backend**: Laravel 11, PHP 8+, MySQL
-- **Authentication**: Laravel Sanctum (Token-based)
-- **Data Export**: Built-in CSV generation
+- **Frontend**: Laravel Blade, Tailwind CSS (via CDN), Inter/Outfit Fonts, Lucide Icons
+- **Backend Core**: Laravel 11, PHP 8+
+- **Database (Relational)**: MySQL (Stores core business records, users, and merged canonical records)
+- **Database (Logs & Metadata)**: MongoDB (Stores massive raw import rows, audit trails, and fuzzy match metadata)
 
 ## System Architecture
-The application runs as a monorepo containing a separate decoupled Backend API and Frontend SPA.
+The application runs as a modern, high-performance **Laravel Monolith**. It relies on a powerful Dual-Database architecture (MySQL + MongoDB) to separate strict transactional business data from high-volume analytical log data.
 
 ### Database Schema Highlights
 - `users`: Stores users and their roles (`admin`, `reviewer`, `viewer`).
-- `price_lists`: Stores all imported rows, including the `pl_number_original` and the system-generated `pl_number_normalized`. Tracks the `is_canonical` status and references `duplicate_of_id` if merged.
-- `duplicate_groups`: Tracks clusters of duplicates along with a `confidence_score` and `match_type`.
-- `duplicate_group_items`: Junction table tracking which price lists belong to which group.
-- `merge_logs` & `audit_logs`: Maintains an immutable history of all system merges and user actions.
-- `deduplication_settings`: Global configuration allowing admins to toggle rule strictness dynamically.
+- `price_lists` (MySQL): Stores all imported rows, including the `pl_number_original` and the system-generated `pl_number_normalized`. Tracks the `is_canonical` status and references `duplicate_of_id` if merged.
+- `duplicate_groups` (MySQL): Tracks clusters of duplicates along with a `confidence_score` and `match_type`.
+- `duplicate_group_items` (MySQL): Junction table tracking which price lists belong to which group.
+- `merge_logs` (MySQL) & `audit_logs` (MongoDB): Maintains an immutable history of all system merges and user actions.
+- `deduplication_settings` (MySQL): Global configuration allowing admins to toggle rule strictness dynamically.
+- `fuzzy_match_results` (MongoDB): Extremely large metadata table storing Levenshtein calculations.
 
 ### Duplicate Detection Algorithm
 1. **Normalization**: Upon upload, the `NormalizationService` cleans the PL number string. It converts everything to uppercase, removes spaces/symbols (configurable), and strips leading zeros.
 2. **Exact & Formatting Match**: The `DeduplicationService` groups all records sharing the exact same `pl_number_normalized`. If the original strings differ but the normalized string matches, it's flagged as a "Formatting Difference" (98% confidence).
-3. **Fuzzy Matching**: Records that are not exact matches are compared against each other using the `similar_text()` Levenshtein distance algorithm. If the similarity percentage exceeds the global threshold (default 85%), they are grouped as a "Possible Typo".
+3. **Fuzzy Matching**: Records that are not exact matches are compared against each other using the `similar_text()` Levenshtein distance algorithm. If the similarity percentage exceeds the global threshold (default 85%), they are grouped as a "Possible Typo" and logged to MongoDB.
 
 ## Setup Instructions
 
 ### Environment Setup
-You need PHP, Composer, Node.js, and MySQL installed.
+You need PHP, Composer, Node.js, MySQL, and MongoDB installed.
 
-#### Backend Setup (Laravel)
 1. Navigate to the `/backend` directory.
-2. Run `composer install` (Note: skip if already installed).
+2. Run `composer install`
 3. Ensure your MySQL database `pl_deduplication` is created.
-4. Copy `.env.example` to `.env` (or just verify the `.env` if already configured).
-5. Run migrations and seeders:
+4. Ensure your MongoDB server is running on `127.0.0.1:27017`.
+5. Copy `.env.example` to `.env` and verify both MySQL and MongoDB connection strings.
+6. Run migrations and seeders:
    ```bash
    php artisan migrate:fresh --seed
    ```
-6. Start the API server:
+7. Start the server:
    ```bash
    php artisan serve
    ```
-   *The API will run on http://localhost:8000*
-
-#### Frontend Setup (React)
-1. Navigate to the `/frontend` directory.
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
-   *The frontend will run on http://localhost:5173*
+   *The application will run on http://localhost:8000*
 
 ## Testing Workflow
-1. Open the frontend and login using the seeded credentials:
+1. Open the browser to http://127.0.0.1:8000 and login using the seeded credentials:
    - **Admin**: `admin@example.com` / `password`
    - **Reviewer**: `reviewer@example.com` / `password`
-   - **Viewer**: `viewer@example.com` / `password`
-2. Navigate to the **Upload** page and drag-and-drop the `sample_price_list.csv` provided in the root directory.
+2. Navigate to the **Import Data** page and upload the `sample_price_list.csv` provided in the root directory.
 3. Once uploaded, navigate to the **Dashboard** to see the duplicate statistics generated by the detection algorithm.
-4. Go to **Duplicates Review**. You will see multiple cards representing duplicate groups.
-5. Click **Review Group** to see the side-by-side comparison. Click on any record to mark it as the Master (Canonical) record.
+4. Go to **Review Duplicates**. You will see multiple cards representing duplicate groups.
+5. Click **Review Group** to see the side-by-side comparison. Select any record to mark it as the Master (Canonical) record.
 6. Click **Merge Selected** to finalize the deduplication.
-7. Navigate to **Reports** and click **Download CSV** under "Cleaned Price List" to retrieve your deduplicated dataset.
+7. Navigate to **Reports** and click **Download CSV Export** under "Cleaned Master Price List" to retrieve your deduplicated dataset.
 
 ## Future Scope
 - Implement asynchronous queue workers (Redis/RabbitMQ) for processing extremely large CSV files (100k+ rows) without blocking the HTTP request.
