@@ -122,9 +122,11 @@
             <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <i data-lucide="layout-dashboard" class="h-5 w-5 mr-3 {{ request()->routeIs('dashboard') ? 'text-white' : 'opacity-70' }}"></i> Dashboard
             </a>
+            @if(in_array(auth()->user()->role ?? 'viewer', ['admin', 'reviewer']))
             <a href="{{ route('upload.create') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('upload.*') ? 'active' : '' }}">
                 <i data-lucide="upload-cloud" class="h-5 w-5 mr-3 {{ request()->routeIs('upload.*') ? 'text-white' : 'opacity-70' }}"></i> Import Data
             </a>
+            @endif
             
             <div class="pt-6 pb-2">
                 <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">Management</p>
@@ -139,6 +141,7 @@
                 <i data-lucide="bar-chart-2" class="h-5 w-5 mr-3 {{ request()->routeIs('reports.*') ? 'text-white' : 'opacity-70' }}"></i> Reports
             </a>
 
+            @if((auth()->user()->role ?? 'viewer') === 'admin')
             <div class="pt-6 pb-2">
                 <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">System Logs</p>
             </div>
@@ -151,6 +154,7 @@
             <a href="{{ route('settings.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
                 <i data-lucide="settings" class="h-5 w-5 mr-3 {{ request()->routeIs('settings.*') ? 'text-white' : 'opacity-70' }}"></i> Settings
             </a>
+            @endif
         </nav>
 
         <div class="p-4 border-t border-white/10 relative z-10 bg-black/20">

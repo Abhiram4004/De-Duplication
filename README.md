@@ -39,6 +39,7 @@ The application runs as a modern, high-performance **Laravel Monolith**. It reli
 
 ### Environment Setup
 You need PHP, Composer, Node.js, MySQL, and MongoDB installed.
+*Note: PHP MongoDB extension version 2.3+ is required.*
 
 1. Navigate to the `/backend` directory.
 2. Run `composer install`

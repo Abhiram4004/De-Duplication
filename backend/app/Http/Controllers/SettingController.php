@@ -14,9 +14,9 @@ class SettingController extends Controller
         ], [
             'ignore_spaces' => true,
             'ignore_hyphens' => true,
-            'ignore_special_chars' => true,
+            'ignore_special_characters' => true,
+            'ignore_leading_zeros' => false,
             'fuzzy_match_threshold' => 85,
-            'auto_merge_exact_matches' => false,
         ]);
         
         return view('settings.index', compact('settings'));
@@ -29,8 +29,8 @@ class SettingController extends Controller
         $settings->update([
             'ignore_spaces' => $request->has('ignore_spaces'),
             'ignore_hyphens' => $request->has('ignore_hyphens'),
-            'ignore_special_chars' => $request->has('ignore_special_chars'),
-            'auto_merge_exact_matches' => $request->has('auto_merge_exact_matches'),
+            'ignore_special_characters' => $request->has('ignore_special_characters'),
+            'ignore_leading_zeros' => $request->has('ignore_leading_zeros'),
             'fuzzy_match_threshold' => $request->input('fuzzy_match_threshold', 85),
         ]);
 

@@ -47,7 +47,7 @@
                     <p class="text-sm text-slate-500">Strip out #, @, %, etc.</p>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" name="ignore_special_chars" id="ignore_special_chars" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-600" {{ $settings->ignore_special_chars ? 'checked' : '' }}>
+                    <input type="checkbox" name="ignore_special_characters" id="ignore_special_characters" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-600" {{ $settings->ignore_special_characters ? 'checked' : '' }}>
                 </div>
             </div>
         </div>
@@ -72,11 +72,11 @@
             <!-- Toggle 4 -->
             <div class="flex items-center justify-between">
                 <div>
-                    <h4 class="text-sm font-medium text-slate-900">Auto-Merge Exact Matches</h4>
-                    <p class="text-sm text-slate-500">Automatically resolve groups where the strings are 100% identical without human review.</p>
+                    <h4 class="text-sm font-medium text-slate-900">Ignore Leading Zeros</h4>
+                    <p class="text-sm text-slate-500">Treat "000123" and "123" as identical.</p>
                 </div>
                 <div class="flex items-center">
-                    <input type="checkbox" name="auto_merge_exact_matches" id="auto_merge_exact_matches" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-600" {{ $settings->auto_merge_exact_matches ? 'checked' : '' }}>
+                    <input type="checkbox" name="ignore_leading_zeros" id="ignore_leading_zeros" class="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-600" {{ $settings->ignore_leading_zeros ? 'checked' : '' }}>
                 </div>
             </div>
         </div>
