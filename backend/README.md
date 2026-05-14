@@ -1,58 +1,66 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# De-duplication of Price List (PL) Numbers
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A full-stack, enterprise-grade web application to upload Price List CSV files, automatically detect duplicate entries, intelligently group them, and provide an elegant interface for reviewing and merging them into canonical master records.
 
-## About Laravel
+## Problem Statement
+When importing large price lists from different vendors or regions, duplicate entries frequently occur due to formatting inconsistencies (e.g., `PL-001` vs `PL 001`), typos, or redundant entries. Identifying and merging these records manually is extremely time-consuming and error-prone.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Objectives
+- Automate the normalization of Price List numbers by ignoring symbols, spaces, hyphens, and leading zeros based on customizable rules.
+- Detect "Exact", "Formatting", and "Possible Typo" duplicates automatically during import.
+- Provide a clean, premium dashboard to monitor the deduplication pipeline.
+- Offer an intuitive UI for data stewards to review grouped duplicates side-by-side and select a master record.
+- Export cleaned datasets and comprehensive audit logs.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Technology Stack
+- **Frontend**: Laravel Blade, Tailwind CSS (via CDN), Inter/Outfit Fonts, Lucide Icons
+- **Backend Core**: Laravel 11, PHP 8+
+- **Database**: **MongoDB Only** (Stores all business records, users, merged canonical records, raw import rows, audit trails, and metadata)
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## System Architecture
+The application runs as a modern, high-performance **Laravel Monolith + MongoDB Database**. 
 
-## Learning Laravel
+> **Important Note:** This project uses a **100% MongoDB-only setup**. There is NO dual database architecture. You do **not** need to create a MySQL database, and **no MySQL, HeidiSQL, or Laragon MySQL** services are required to run this project!
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Database Schema Highlights
+- `users`: Stores users and their roles (`admin`, `reviewer`, `viewer`).
+- `price_lists`: Stores all imported rows, including the `pl_number_original` and the system-generated `pl_number_normalized`. Tracks the `is_canonical` status and references `duplicate_of_id` if merged.
+- `duplicate_groups`: Tracks clusters of duplicates along with a `confidence_score` and `match_type`.
+- `duplicate_group_items`: Junction collection tracking which price lists belong to which group.
+- `merge_logs` & `audit_logs`: Maintains an immutable history of all system merges and user actions.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## Setup Instructions
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+### Environment Setup
+You need PHP, Composer, Node.js, and MongoDB installed.
+*Note: PHP MongoDB extension version 2.3+ is required. No MySQL is required!*
 
-## Agentic Development
+1. Navigate to the `/backend` directory.
+2. Run `composer install`
+3. Ensure your MongoDB server is running on `127.0.0.1:27017`.
+4. Copy `.env.example` to `.env` and verify the MongoDB connection string.
+5. Setup the database by running the seeder (Since this is MongoDB-only, do **not** use `php artisan migrate:fresh --seed`):
+   ```bash
+   php artisan db:seed
+   ```
+6. Start the server:
+   ```bash
+   php artisan serve
+   ```
+   *The application will run on http://localhost:8000*
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Testing Workflow
+1. Open the browser to http://127.0.0.1:8000 and login using the seeded credentials:
+   - **Admin**: `admin@example.com` / `password`
+   - **Reviewer**: `reviewer@example.com` / `password`
+2. Navigate to the **Import Data** page and upload the `sample_price_list.csv` provided in the root directory.
+3. Once uploaded, navigate to the **Dashboard** to see the duplicate statistics generated by the detection algorithm.
+4. Go to **Review Duplicates**. You will see multiple cards representing duplicate groups.
+5. Click **Review Group** to see the side-by-side comparison. Select any record to mark it as the Master (Canonical) record.
+6. Click **Merge Selected** to finalize the deduplication.
+7. Navigate to **Reports** and click **Download CSV Export** under "Cleaned Master Price List" to retrieve your deduplicated dataset.
 
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
-```
-
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Future Scope
+- Implement asynchronous queue workers (Redis/RabbitMQ) for processing extremely large CSV files (100k+ rows) without blocking the HTTP request.
+- Integrate WebSockets (Laravel Reverb) to show real-time processing progress bars to the user during upload.
+- Expand typo detection using machine learning embeddings for semantic product matching.
