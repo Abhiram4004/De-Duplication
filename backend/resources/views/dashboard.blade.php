@@ -7,7 +7,7 @@
 @section('content')
 <div class="mb-8">
     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Dashboard Overview</h1>
-    <p class="mt-1 text-sm text-slate-500">A high-level view of your data deduplication system across MySQL and MongoDB.</p>
+    <p class="mt-1 text-sm text-slate-500">A high-level view of your data deduplication system in MongoDB.</p>
 </div>
 
 <!-- Metrics Grid -->
@@ -97,7 +97,7 @@
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
         <div class="px-6 py-5 border-b border-slate-200">
             <h3 class="text-base leading-6 font-semibold text-slate-900">System Architecture</h3>
-            <p class="mt-1 text-sm text-slate-500">Live Dual-Database Infrastructure</p>
+            <p class="mt-1 text-sm text-slate-500">Live Single-Database Infrastructure</p>
         </div>
         <div class="p-6 space-y-6">
             <div class="flex items-start">
@@ -105,17 +105,8 @@
                     <i data-lucide="database" class="h-5 w-5 text-blue-600"></i>
                 </div>
                 <div class="ml-4">
-                    <h4 class="text-sm font-bold text-slate-900">MySQL Database (Active)</h4>
+                    <h4 class="text-sm font-bold text-slate-900">MongoDB (Active)</h4>
                     <p class="text-sm text-slate-500 mt-1">Handling structured business records, users, and core settings. Ensures transactional integrity for merges.</p>
-                </div>
-            </div>
-            <div class="flex items-start">
-                <div class="flex-shrink-0 bg-emerald-50 rounded-md p-2 mt-1 border border-emerald-100">
-                    <i data-lucide="leaf" class="h-5 w-5 text-emerald-600"></i>
-                </div>
-                <div class="ml-4">
-                    <h4 class="text-sm font-bold text-slate-900">MongoDB Database (Active)</h4>
-                    <p class="text-sm text-slate-500 mt-1">Handling massive unstructured log data: raw uploads, fuzzy matches, and detailed system audit logs.</p>
                 </div>
             </div>
         </div>

@@ -21,7 +21,7 @@ class UploadController extends Controller
 
     public function index()
     {
-        return response()->json(UploadedFile::with('user')->latest()->get());
+        return response()->json(UploadedFile::with('user')->orderBy('created_at', -1)->get());
     }
 
     public function show($id)

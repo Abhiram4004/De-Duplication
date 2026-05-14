@@ -8,7 +8,7 @@ class PriceListController extends Controller
 {
     public function index()
     {
-        $records = PriceList::latest()->paginate(50);
+        $records = PriceList::orderBy('created_at', -1)->paginate(50);
         return view('price_lists.index', compact('records'));
     }
 }

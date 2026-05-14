@@ -25,7 +25,7 @@ class DashboardController extends Controller
 
         $chartData = UploadedFile::selectRaw('DATE(created_at) as date, count(*) as count')
             ->groupBy('date')
-            ->orderBy('date', 'desc')
+            ->orderBy('date', -1)
             ->take(7)
             ->get()
             ->reverse()

@@ -14,7 +14,10 @@ class DuplicateController extends Controller
 {
     public function index()
     {
-        $groups = DuplicateGroup::withCount('items')->latest()->get();
+        $groups = DuplicateGroup::with('items')->orderBy('created_at', -1)->get()->map(function ($group) {
+            $group->items_count = $group->items ? $group->items->count() : 0;
+            return $group;
+        });
         return view('duplicates.index', compact('groups'));
     }
 

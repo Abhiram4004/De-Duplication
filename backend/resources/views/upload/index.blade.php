@@ -7,7 +7,7 @@
 @section('content')
 <div class="mb-8">
     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Upload Price List</h1>
-    <p class="mt-1 text-sm text-slate-500">Upload CSV or Excel files. Raw rows will be logged to MongoDB, structured records to MySQL.</p>
+    <p class="mt-1 text-sm text-slate-500">Upload CSV or Excel files. Records will be parsed and logged to MongoDB.</p>
 </div>
 
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm mb-8 overflow-hidden">

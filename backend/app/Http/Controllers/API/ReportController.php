@@ -37,7 +37,7 @@ class ReportController extends Controller
 
     public function mergeHistory()
     {
-        $logs = MergeLog::with(['group', 'canonicalPriceList', 'mergedBy'])->latest()->get();
+        $logs = MergeLog::with(['group', 'canonicalPriceList', 'mergedBy'])->orderBy('created_at', -1)->get();
         
         $headers = ['ID', 'Group Code', 'Canonical PL', 'Merged IDs', 'Merged By', 'Date', 'Notes'];
         

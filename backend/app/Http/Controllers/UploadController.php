@@ -22,7 +22,7 @@ class UploadController extends Controller
 
     public function create()
     {
-        $uploads = UploadedFile::with('user')->latest()->get();
+        $uploads = UploadedFile::with('user')->orderBy('created_at', -1)->get();
         return view('upload.index', compact('uploads'));
     }
 

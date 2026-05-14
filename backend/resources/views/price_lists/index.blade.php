@@ -7,7 +7,7 @@
 @section('content')
 <div class="mb-8">
     <h1 class="text-2xl font-bold tracking-tight text-slate-900">Price List Records</h1>
-    <p class="mt-1 text-sm text-slate-500">All structured business records stored in MySQL.</p>
+    <p class="mt-1 text-sm text-slate-500">All structured business records stored in MongoDB.</p>
 </div>
 
 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">

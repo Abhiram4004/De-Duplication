@@ -8,7 +8,7 @@ class AuditLogController extends Controller
 {
     public function index()
     {
-        $logs = AuditLog::orderBy('created_at', 'desc')->paginate(50);
+        $logs = AuditLog::orderBy('created_at', -1)->paginate(50);
         return view('audit_logs.index', compact('logs'));
     }
 }
