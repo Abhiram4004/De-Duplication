@@ -7,7 +7,7 @@ When importing large price lists from different vendors or regions, duplicate en
 
 ## Objectives
 - Automate the normalization of Price List numbers by ignoring symbols, spaces, hyphens, and leading zeros based on customizable rules.
-- Detect "Exact", "Formatting", and "Possible Typo" (Levenshtein distance) duplicates automatically during import.
+- Detect "Exact", "Formatting", and "Possible Typo" duplicates automatically during import.
 - Provide a clean, premium dashboard to monitor the deduplication pipeline.
 - Offer an intuitive UI for data stewards to review grouped duplicates side-by-side and select a master record.
 - Export cleaned datasets and comprehensive audit logs.
@@ -15,42 +15,35 @@ When importing large price lists from different vendors or regions, duplicate en
 ## Technology Stack
 - **Frontend**: Laravel Blade, Tailwind CSS (via CDN), Inter/Outfit Fonts, Lucide Icons
 - **Backend Core**: Laravel 11, PHP 8+
-- **Database (Relational)**: MySQL (Stores core business records, users, and merged canonical records)
-- **Database (Logs & Metadata)**: MongoDB (Stores massive raw import rows, audit trails, and fuzzy match metadata)
+- **Database**: **MongoDB Only** (Stores all business records, users, merged canonical records, raw import rows, audit trails, and metadata)
 
 ## System Architecture
-The application runs as a modern, high-performance **Laravel Monolith**. It relies on a powerful Dual-Database architecture (MySQL + MongoDB) to separate strict transactional business data from high-volume analytical log data.
+The application runs as a modern, high-performance **Laravel Monolith + MongoDB Database**. 
+
+> **Important Note:** This project uses a **100% MongoDB-only setup**. There is NO dual database architecture. You do **not** need to create a MySQL database, and **no MySQL, HeidiSQL, or Laragon MySQL** services are required to run this project!
 
 ### Database Schema Highlights
 - `users`: Stores users and their roles (`admin`, `reviewer`, `viewer`).
-- `price_lists` (MySQL): Stores all imported rows, including the `pl_number_original` and the system-generated `pl_number_normalized`. Tracks the `is_canonical` status and references `duplicate_of_id` if merged.
-- `duplicate_groups` (MySQL): Tracks clusters of duplicates along with a `confidence_score` and `match_type`.
-- `duplicate_group_items` (MySQL): Junction table tracking which price lists belong to which group.
-- `merge_logs` (MySQL) & `audit_logs` (MongoDB): Maintains an immutable history of all system merges and user actions.
-- `deduplication_settings` (MySQL): Global configuration allowing admins to toggle rule strictness dynamically.
-- `fuzzy_match_results` (MongoDB): Extremely large metadata table storing Levenshtein calculations.
-
-### Duplicate Detection Algorithm
-1. **Normalization**: Upon upload, the `NormalizationService` cleans the PL number string. It converts everything to uppercase, removes spaces/symbols (configurable), and strips leading zeros.
-2. **Exact & Formatting Match**: The `DeduplicationService` groups all records sharing the exact same `pl_number_normalized`. If the original strings differ but the normalized string matches, it's flagged as a "Formatting Difference" (98% confidence).
-3. **Fuzzy Matching**: Records that are not exact matches are compared against each other using the `similar_text()` Levenshtein distance algorithm. If the similarity percentage exceeds the global threshold (default 85%), they are grouped as a "Possible Typo" and logged to MongoDB.
+- `price_lists`: Stores all imported rows, including the `pl_number_original` and the system-generated `pl_number_normalized`. Tracks the `is_canonical` status and references `duplicate_of_id` if merged.
+- `duplicate_groups`: Tracks clusters of duplicates along with a `confidence_score` and `match_type`.
+- `duplicate_group_items`: Junction collection tracking which price lists belong to which group.
+- `merge_logs` & `audit_logs`: Maintains an immutable history of all system merges and user actions.
 
 ## Setup Instructions
 
 ### Environment Setup
-You need PHP, Composer, Node.js, MySQL, and MongoDB installed.
-*Note: PHP MongoDB extension version 2.3+ is required.*
+You need PHP, Composer, Node.js, and MongoDB installed.
+*Note: PHP MongoDB extension version 2.3+ is required. No MySQL is required!*
 
 1. Navigate to the `/backend` directory.
 2. Run `composer install`
-3. Ensure your MySQL database `pl_deduplication` is created.
-4. Ensure your MongoDB server is running on `127.0.0.1:27017`.
-5. Copy `.env.example` to `.env` and verify both MySQL and MongoDB connection strings.
-6. Run migrations and seeders:
+3. Ensure your MongoDB server is running on `127.0.0.1:27017`.
+4. Copy `.env.example` to `.env` and verify the MongoDB connection string.
+5. Setup the database by running the seeder (Since this is MongoDB-only, do **not** use `php artisan migrate:fresh --seed`):
    ```bash
-   php artisan migrate:fresh --seed
+   php artisan db:seed
    ```
-7. Start the server:
+6. Start the server:
    ```bash
    php artisan serve
    ```
