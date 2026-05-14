@@ -10,7 +10,7 @@
     <p class="mt-1 text-sm text-slate-500">Configure how the system identifies and scores duplicate records.</p>
 </div>
 
-<form action="{{ route('settings.store') }}" method="POST" class="max-w-3xl">
+<form action="{{ route('admin.settings.store') }}" method="POST" class="max-w-3xl">
     @csrf
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mb-6">
         <div class="px-6 py-5 border-b border-slate-200 bg-slate-50">

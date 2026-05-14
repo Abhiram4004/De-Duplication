@@ -14,6 +14,7 @@ class DuplicateGroup extends Model
         'match_type',
         'confidence_score',
         'status',
+        'user_id',
     ];
 
     public function items()

@@ -10,12 +10,46 @@ class ReportController extends Controller
 {
     public function index()
     {
-        $stats = [
-            'active_records' => PriceList::where('status', 'active')->count(),
-            'merged_records' => PriceList::where('status', 'merged')->count(),
-            'total_groups' => DuplicateGroup::count(),
-            'resolved_groups' => DuplicateGroup::where('status', 'resolved')->count(),
-        ];
+        if (auth()->user()->role === 'admin') {
+            $stats = [
+                'active_records' => PriceList::where('status', 'active')->count(),
+                'merged_records' => PriceList::where('status', 'merged')->count(),
+                'total_groups' => DuplicateGroup::count(),
+                'resolved_groups' => DuplicateGroup::where('status', 'resolved')->count(),
+            ];
+            
+            $users = \App\Models\User::all();
+            $userBreakdown = [];
+            foreach ($users as $user) {
+                $userFileIds = \App\Models\UploadedFile::where('user_id', $user->id)->pluck('id');
+                $uploadsCount = count($userFileIds);
+                $recordsImported = \App\Models\UploadedFile::where('user_id', $user->id)->sum('imported_records');
+                $dupsDetected = DuplicateGroup::where('user_id', $user->id)->count();
+                $dupsResolved = DuplicateGroup::where('user_id', $user->id)->where('status', 'resolved')->count();
+                $mergesPerformed = MergeLog::where('merged_by', $user->id)->count();
+
+                if ($uploadsCount > 0 || $mergesPerformed > 0) {
+                    $userBreakdown[] = [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'uploads' => $uploadsCount,
+                        'records' => $recordsImported,
+                        'detected' => $dupsDetected,
+                        'resolved' => $dupsResolved,
+                        'merges' => $mergesPerformed,
+                    ];
+                }
+            }
+            return view('reports.index', compact('stats', 'userBreakdown'));
+        } else {
+            $userFileIds = \App\Models\UploadedFile::where('user_id', auth()->id())->pluck('id');
+            $stats = [
+                'active_records' => PriceList::whereIn('uploaded_file_id', $userFileIds)->where('status', 'active')->count(),
+                'merged_records' => PriceList::whereIn('uploaded_file_id', $userFileIds)->where('status', 'merged')->count(),
+                'total_groups' => DuplicateGroup::where('user_id', auth()->id())->count(),
+                'resolved_groups' => DuplicateGroup::where('user_id', auth()->id())->where('status', 'resolved')->count(),
+            ];
+        }
         
         return view('reports.index', compact('stats'));
     }
@@ -29,8 +63,14 @@ class ReportController extends Controller
             "Expires"             => "0"
         ];
 
+        if (auth()->user()->role === 'admin') {
+            abort(403, 'Admins cannot download raw user data reports.');
+        }
+
+        $userFileIds = \App\Models\UploadedFile::where('user_id', auth()->id())->pluck('id');
+
         if ($type === 'cleaned') {
-            $records = PriceList::where('status', 'active')->get();
+            $records = PriceList::whereIn('uploaded_file_id', $userFileIds)->where('status', 'active')->get();
             $filename = 'cleaned_price_list_' . date('Ymd_His') . '.csv';
             $headers["Content-Disposition"] = "attachment; filename=$filename";
             
@@ -43,7 +83,7 @@ class ReportController extends Controller
                 fclose($file);
             };
         } elseif ($type === 'duplicates') {
-            $records = PriceList::where('status', 'duplicate')->get();
+            $records = PriceList::whereIn('uploaded_file_id', $userFileIds)->where('status', 'duplicate')->get();
             $filename = 'duplicates_report_' . date('Ymd_His') . '.csv';
             $headers["Content-Disposition"] = "attachment; filename=$filename";
             
@@ -56,7 +96,7 @@ class ReportController extends Controller
                 fclose($file);
             };
         } elseif ($type === 'rejected') {
-            $records = PriceList::where('status', 'rejected')->get();
+            $records = PriceList::whereIn('uploaded_file_id', $userFileIds)->where('status', 'rejected')->get();
             $filename = 'rejected_duplicates_report_' . date('Ymd_His') . '.csv';
             $headers["Content-Disposition"] = "attachment; filename=$filename";
             
@@ -69,7 +109,7 @@ class ReportController extends Controller
                 fclose($file);
             };
         } elseif ($type === 'merges') {
-            $records = MergeLog::with('mergedBy')->get();
+            $records = MergeLog::where('merged_by', auth()->id())->with('mergedBy')->get();
             $filename = 'merge_history_report_' . date('Ymd_His') . '.csv';
             $headers["Content-Disposition"] = "attachment; filename=$filename";
             
@@ -91,6 +131,11 @@ class ReportController extends Controller
         } else {
             abort(404);
         }
+
+        \App\Services\AuditLogger::log('report_downloaded', 'reports', 'success', 'Report downloaded', [
+            'report_type' => $type,
+            'downloaded_at' => now()->toDateTimeString()
+        ]);
 
         return response()->stream($callback, 200, $headers);
     }

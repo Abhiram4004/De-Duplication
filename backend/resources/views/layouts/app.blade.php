@@ -27,9 +27,31 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { 
-            background: linear-gradient(135deg, #f0f4ff 0%, #fdf4ff 100%);
-            background-attachment: fixed;
-            color: #1e293b; 
+            background-color: #f8fafc;
+            color: #0f172a; 
+            overflow-x: hidden;
+        }
+        /* Animated Background Blobs */
+        .bg-blobs {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            overflow: hidden;
+            background: #f8fafc;
+        }
+        .blob {
+            position: absolute;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: radial-gradient(circle, rgba(96,165,250,0.3) 0%, rgba(96,165,250,0) 70%); }
+        .blob-2 { bottom: -10%; right: -10%; width: 60vw; height: 60vw; background: radial-gradient(circle, rgba(236,72,153,0.2) 0%, rgba(236,72,153,0) 70%); animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 30%; width: 40vw; height: 40vw; background: radial-gradient(circle, rgba(167,139,250,0.2) 0%, rgba(167,139,250,0) 70%); animation-delay: -10s; }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5%, 5%) scale(1.05); }
+            100% { transform: translate(-5%, 10%) scale(0.95); }
         }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -37,10 +59,17 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
         .glass-header { 
-            background: rgba(255, 255, 255, 0.75); 
-            backdrop-filter: blur(16px); 
+            background: rgba(255, 255, 255, 0.65); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.8); 
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.5); 
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6);
         }
         
         .colorful-sidebar {
@@ -81,12 +110,17 @@
 
         /* Page Load Animation */
         .page-enter {
-            animation: fadeSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             opacity: 0;
         }
+        .stagger-1 { animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards; opacity: 0; }
+        .stagger-2 { animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards; opacity: 0; }
+        .stagger-3 { animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards; opacity: 0; }
+        .stagger-4 { animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.4s forwards; opacity: 0; }
+        
         @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.98); filter: blur(4px); }
-            to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+            from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+            to { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
 
         /* Touch / Ripple Animation */
@@ -103,9 +137,18 @@
             0% { width: 0px; height: 0px; opacity: 0.8; }
             100% { width: 400px; height: 400px; opacity: 0; }
         }
+        
+        /* Table enhancements */
+        .table-hover-row { transition: all 0.2s ease; }
+        .table-hover-row:hover { transform: translateY(-1px) scale(1.002); box-shadow: 0 4px 12px -2px rgba(0,0,0,0.05); background: #ffffff; z-index: 10; position: relative; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex text-sm">
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
 
     @auth
     <!-- Sidebar -->
@@ -119,41 +162,63 @@
         </div>
         
         <nav class="flex-1 overflow-y-auto py-6 px-3 space-y-1 relative z-10">
-            <a href="{{ route('dashboard') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <i data-lucide="layout-dashboard" class="h-5 w-5 mr-3 {{ request()->routeIs('dashboard') ? 'text-white' : 'opacity-70' }}"></i> Dashboard
-            </a>
-            @if(in_array(auth()->user()->role ?? 'viewer', ['admin', 'reviewer']))
-            <a href="{{ route('upload.create') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('upload.*') ? 'active' : '' }}">
-                <i data-lucide="upload-cloud" class="h-5 w-5 mr-3 {{ request()->routeIs('upload.*') ? 'text-white' : 'opacity-70' }}"></i> Import Data
-            </a>
-            @endif
+            @php $role = auth()->user()->role ?? 'user'; @endphp
             
-            <div class="pt-6 pb-2">
-                <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">Management</p>
-            </div>
-            <a href="{{ route('price_lists.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('price_lists.*') ? 'active' : '' }}">
-                <i data-lucide="database" class="h-5 w-5 mr-3 {{ request()->routeIs('price_lists.*') ? 'text-white' : 'opacity-70' }}"></i> Price Lists
-            </a>
-            <a href="{{ route('duplicates.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('duplicates.*') ? 'active' : '' }}">
-                <i data-lucide="git-merge" class="h-5 w-5 mr-3 {{ request()->routeIs('duplicates.*') ? 'text-white' : 'opacity-70' }}"></i> Review Duplicates
-            </a>
-            <a href="{{ route('reports.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                <i data-lucide="bar-chart-2" class="h-5 w-5 mr-3 {{ request()->routeIs('reports.*') ? 'text-white' : 'opacity-70' }}"></i> Reports
-            </a>
+            @if($role === 'admin')
+                <a href="{{ route('admin.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    <i data-lucide="layout-dashboard" class="h-5 w-5 mr-3 {{ request()->routeIs('admin.dashboard') ? 'text-white' : 'opacity-70' }}"></i> Dashboard
+                </a>
+                <div class="pt-6 pb-2">
+                    <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">Platform Administration</p>
+                </div>
+                <a href="{{ route('admin.users.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                    <i data-lucide="users" class="h-5 w-5 mr-3 {{ request()->routeIs('admin.users.*') ? 'text-white' : 'opacity-70' }}"></i> Users
+                </a>
+                <div class="pt-6 pb-2">
+                    <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">System Management</p>
+                </div>
+                <a href="{{ route('admin.reports.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                    <i data-lucide="bar-chart-2" class="h-5 w-5 mr-3 {{ request()->routeIs('admin.reports.*') ? 'text-white' : 'opacity-70' }}"></i> System Reports
+                </a>
 
-            @if((auth()->user()->role ?? 'viewer') === 'admin')
-            <div class="pt-6 pb-2">
-                <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">System Logs</p>
-            </div>
-            <a href="{{ route('merge_logs.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('merge_logs.*') ? 'active' : '' }}">
-                <i data-lucide="history" class="h-5 w-5 mr-3 {{ request()->routeIs('merge_logs.*') ? 'text-white' : 'opacity-70' }}"></i> Merge History
-            </a>
-            <a href="{{ route('audit_logs.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('audit_logs.*') ? 'active' : '' }}">
-                <i data-lucide="shield-alert" class="h-5 w-5 mr-3 {{ request()->routeIs('audit_logs.*') ? 'text-white' : 'opacity-70' }}"></i> Audit Logs
-            </a>
-            <a href="{{ route('settings.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                <i data-lucide="settings" class="h-5 w-5 mr-3 {{ request()->routeIs('settings.*') ? 'text-white' : 'opacity-70' }}"></i> Settings
-            </a>
+                <div class="pt-6 pb-2">
+                    <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">System Logs</p>
+                </div>
+                <a href="{{ route('admin.audit_logs.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('admin.audit_logs.*') ? 'active' : '' }}">
+                    <i data-lucide="shield-alert" class="h-5 w-5 mr-3 {{ request()->routeIs('admin.audit_logs.*') ? 'text-white' : 'opacity-70' }}"></i> Audit Logs
+                </a>
+                <a href="{{ route('admin.settings.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                    <i data-lucide="settings" class="h-5 w-5 mr-3 {{ request()->routeIs('admin.settings.*') ? 'text-white' : 'opacity-70' }}"></i> Settings
+                </a>
+            @else
+                <a href="{{ route('user.dashboard') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">
+                    <i data-lucide="layout-dashboard" class="h-5 w-5 mr-3 {{ request()->routeIs('user.dashboard') ? 'text-white' : 'opacity-70' }}"></i> Dashboard
+                </a>
+                
+                <a href="{{ route('user.upload.create') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('user.upload.*') ? 'active' : '' }}">
+                    <i data-lucide="upload-cloud" class="h-5 w-5 mr-3 {{ request()->routeIs('user.upload.*') ? 'text-white' : 'opacity-70' }}"></i> Import Data
+                </a>
+                
+                <div class="pt-6 pb-2">
+                    <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">Management</p>
+                </div>
+                <a href="{{ route('user.price_lists.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('user.price_lists.*') ? 'active' : '' }}">
+                    <i data-lucide="database" class="h-5 w-5 mr-3 {{ request()->routeIs('user.price_lists.*') ? 'text-white' : 'opacity-70' }}"></i> Price Lists
+                </a>
+                
+                <a href="{{ route('user.duplicates.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('user.duplicates.*') ? 'active' : '' }}">
+                    <i data-lucide="git-merge" class="h-5 w-5 mr-3 {{ request()->routeIs('user.duplicates.*') ? 'text-white' : 'opacity-70' }}"></i> Review Duplicates
+                </a>
+                
+                <a href="{{ route('user.reports.index') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('user.reports.*') ? 'active' : '' }}">
+                    <i data-lucide="bar-chart-2" class="h-5 w-5 mr-3 {{ request()->routeIs('user.reports.*') ? 'text-white' : 'opacity-70' }}"></i> My Reports
+                </a>
+                <div class="pt-6 pb-2">
+                    <p class="px-4 text-xs font-bold text-indigo-300 uppercase tracking-widest opacity-80">Account</p>
+                </div>
+                <a href="{{ route('user.profile') }}" class="flex items-center px-4 py-3 rounded-lg sidebar-link {{ request()->routeIs('user.profile') ? 'active' : '' }}">
+                    <i data-lucide="user" class="h-5 w-5 mr-3 {{ request()->routeIs('user.profile') ? 'text-white' : 'opacity-70' }}"></i> My Profile
+                </a>
             @endif
         </nav>
 
@@ -166,7 +231,7 @@
                 </div>
                 <div class="ml-3 truncate flex-1">
                     <p class="text-sm font-bold text-white truncate">{{ auth()->user()->name }}</p>
-                    <p class="text-xs font-medium text-indigo-200 truncate">{{ ucfirst(auth()->user()->role ?? 'Admin') }}</p>
+                    <p class="text-xs font-medium text-indigo-200 truncate">{{ ucfirst(auth()->user()->role ?? 'User') }}</p>
                 </div>
                 <form method="POST" action="{{ route('logout') }}" class="ml-2">
                     @csrf

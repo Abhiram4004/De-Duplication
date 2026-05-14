@@ -10,10 +10,10 @@
     <p class="mt-1 text-sm text-slate-500">All structured business records stored in MongoDB.</p>
 </div>
 
-<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+<div class="glass-panel rounded-xl overflow-hidden shadow-sm stagger-1">
     <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-200">
-            <thead class="bg-slate-50">
+        <table class="min-w-full divide-y divide-slate-200/50">
+            <thead class="bg-white/50 backdrop-blur-sm">
                 <tr>
                     <th scope="col" class="py-3.5 pl-6 pr-3 text-left text-xs font-semibold text-slate-900 uppercase tracking-wider">ID</th>
                     <th scope="col" class="px-3 py-3.5 text-left text-xs font-semibold text-slate-900 uppercase tracking-wider">PL Number (Raw)</th>
@@ -24,9 +24,9 @@
                     <th scope="col" class="px-6 py-3.5 text-center text-xs font-semibold text-slate-900 uppercase tracking-wider">Status</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200 bg-white">
+            <tbody class="divide-y divide-slate-200/50">
                 @forelse($records as $record)
-                    <tr class="hover:bg-slate-50 transition-colors">
+                    <tr class="table-hover-row hover:bg-white/60 transition-colors">
                         <td class="whitespace-nowrap py-3 pl-6 pr-3 text-xs text-slate-500">#{{ $record->id }}</td>
                         <td class="whitespace-nowrap px-3 py-3 text-sm font-medium text-slate-900 font-mono">{{ $record->pl_number_original }}</td>
                         <td class="whitespace-nowrap px-3 py-3 text-xs text-slate-500 font-mono">{{ $record->pl_number_normalized }}</td>

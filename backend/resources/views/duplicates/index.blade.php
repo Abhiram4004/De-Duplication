@@ -12,7 +12,7 @@
 
 <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
     @forelse($groups as $group)
-        <div class="bg-white rounded-xl border {{ $group->status === 'pending' ? 'border-brand-200 shadow-md shadow-brand-500/10' : 'border-slate-200 shadow-sm opacity-75' }} overflow-hidden flex flex-col transition-all hover:-translate-y-1 hover:shadow-lg">
+        <div class="glass-panel rounded-xl {{ $group->status === 'pending' ? 'border-brand-300 shadow-lg shadow-brand-500/20' : 'border-white/50 shadow-sm opacity-80' }} overflow-hidden flex flex-col transition-all hover:-translate-y-1 hover:shadow-xl stagger-{{ ($loop->index % 4) + 1 }}">
             <div class="p-5 flex-1">
                 <div class="flex justify-between items-start mb-4">
                     <div>
@@ -50,8 +50,8 @@
                 </div>
             </div>
             
-            <div class="bg-slate-50 px-5 py-3 border-t border-slate-100">
-                <a href="{{ route('duplicates.show', $group->id) }}" class="text-sm font-medium text-brand-600 hover:text-brand-500 flex items-center justify-center w-full">
+            <div class="bg-white/30 backdrop-blur-sm px-5 py-3 border-t border-white/50">
+                <a href="{{ route(auth()->user()->role === 'admin' ? 'admin.duplicates.show' : 'user.duplicates.show', $group->id) }}" class="text-sm font-bold text-brand-600 hover:text-brand-800 flex items-center justify-center w-full transition-colors">
                     Review Group <i data-lucide="arrow-right" class="h-4 w-4 ml-1.5"></i>
                 </a>
             </div>

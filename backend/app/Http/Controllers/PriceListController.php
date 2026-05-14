@@ -8,7 +8,8 @@ class PriceListController extends Controller
 {
     public function index()
     {
-        $records = PriceList::orderBy('created_at', -1)->paginate(50);
+        $userFileIds = \App\Models\UploadedFile::where('user_id', auth()->id())->pluck('id');
+        $records = PriceList::whereIn('uploaded_file_id', $userFileIds)->orderBy('created_at', -1)->paginate(50);
         return view('price_lists.index', compact('records'));
     }
 }

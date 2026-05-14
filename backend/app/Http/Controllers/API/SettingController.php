@@ -37,11 +37,12 @@ class SettingController extends Controller
         $settings = DeduplicationSetting::first();
         $settings->update($request->all());
 
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'update_settings',
-            'description' => 'Updated deduplication settings',
-            'metadata' => $request->all()
+        \App\Services\AuditLogger::log('settings_updated', 'settings', 'success', 'Deduplication settings updated', [
+            'ignore_hyphens' => $settings->ignore_hyphens,
+            'ignore_spaces' => $settings->ignore_spaces,
+            'ignore_special_characters' => $settings->ignore_special_characters,
+            'ignore_leading_zeros' => $settings->ignore_leading_zeros,
+            'fuzzy_match_threshold' => $settings->fuzzy_match_threshold
         ]);
 
         return response()->json(['message' => 'Settings updated successfully', 'settings' => $settings]);

@@ -30,7 +30,10 @@ class DeduplicationService
             $record->save();
         }
 
-        $allRecords = PriceList::whereIn('status', ['active', 'duplicate'])->get();
+        $userFileIds = UploadedFile::where('user_id', $upload->user_id)->pluck('id');
+        $allRecords = PriceList::whereIn('uploaded_file_id', $userFileIds)
+                               ->whereIn('status', ['active', 'duplicate'])
+                               ->get();
 
         $groupedByNormalized = $allRecords->groupBy('pl_number_normalized');
         $duplicateCount = 0;
@@ -47,19 +50,19 @@ class DeduplicationService
                 $matchType = $originals->count() === 1 ? 'exact' : 'formatting';
                 $confidenceScore = $matchType === 'exact' ? 100 : 98;
 
-                $this->createDuplicateGroup($records, $matchType, $confidenceScore);
+                $this->createDuplicateGroup($records, $matchType, $confidenceScore, $upload->user_id);
                 $duplicateCount += $records->count();
             }
         }
 
-        $this->detectFuzzyMatches($allRecords->unique('pl_number_normalized'), $settings);
+        $this->detectFuzzyMatches($allRecords->unique('pl_number_normalized'), $settings, $upload->user_id);
 
         $upload->duplicate_records = $duplicateCount;
         $upload->status = 'completed';
         $upload->save();
     }
 
-    protected function detectFuzzyMatches($uniqueRecords, $settings)
+    protected function detectFuzzyMatches($uniqueRecords, $settings, $userId)
     {
         $threshold = $settings->fuzzy_match_threshold;
         $processed = [];
@@ -99,13 +102,13 @@ class DeduplicationService
                     $this->createDuplicateGroup($allVariants, 'typo', (int) $similarGroup->avg(function($item) use ($record1) {
                         similar_text($record1->pl_number_normalized, $item->pl_number_normalized, $sim);
                         return $sim;
-                    }));
+                    }), $userId);
                 }
             }
         }
     }
 
-    protected function createDuplicateGroup($records, $matchType, $confidenceScore)
+    protected function createDuplicateGroup($records, $matchType, $confidenceScore, $userId)
     {
         $groupCode = 'DUP-' . strtoupper(uniqid());
 
@@ -114,6 +117,7 @@ class DeduplicationService
             'match_type' => $matchType,
             'confidence_score' => $confidenceScore,
             'status' => 'pending',
+            'user_id' => $userId,
         ]);
 
         $isFirst = true;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>User Login - PL Deduplicator</title>
+    <title>Register - PL Deduplicator</title>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
@@ -40,14 +40,11 @@
     </div>
     <div class="sm:mx-auto sm:w-full sm:max-w-md page-enter">
         <div class="flex justify-center">
-            <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-brand-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
-                <i data-lucide="user" class="h-8 w-8 text-white"></i>
+            <div class="h-12 w-12 rounded-full bg-brand-600 flex items-center justify-center shadow-lg shadow-brand-500/30">
+                <i data-lucide="user-plus" class="h-6 w-6 text-white"></i>
             </div>
         </div>
-        <h2 class="mt-6 text-center text-2xl font-bold tracking-tight text-slate-900">User Login</h2>
-        <p class="mt-2 text-center text-sm text-slate-600">
-            Sign in to your account
-        </p>
+        <h2 class="mt-6 text-center text-2xl font-bold tracking-tight text-slate-900">Create an account</h2>
     </div>
 
     <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md page-enter" style="animation-delay: 0.1s;">
@@ -56,20 +53,37 @@
                 <div id="error-alert" class="rounded-md bg-red-50 p-4 mb-6 border border-red-200">
                     <div class="flex">
                         <div class="flex-shrink-0"><i data-lucide="alert-circle" class="h-5 w-5 text-red-400"></i></div>
-                        <div class="ml-3"><h3 class="text-sm font-medium text-red-800">Invalid credentials</h3></div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Please correct the following errors:</h3>
+                            <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
                 </div>
             @endif
 
-            <form class="space-y-6" action="{{ route('login') }}" method="POST">
+            <form class="space-y-4" action="{{ route('register') }}" method="POST">
                 @csrf
+                <div>
+                    <label for="name" class="block text-sm font-medium text-slate-700">Full Name</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="user" class="h-5 w-5 text-slate-400"></i>
+                        </div>
+                        <input id="name" name="name" type="text" value="{{ old('name') }}" required class="block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors" placeholder="John Doe">
+                    </div>
+                </div>
+
                 <div>
                     <label for="email" class="block text-sm font-medium text-slate-700">Email address</label>
                     <div class="mt-1 relative rounded-md shadow-sm">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i data-lucide="mail" class="h-5 w-5 text-slate-400"></i>
                         </div>
-                        <input id="email" name="email" type="email" autocomplete="email" required class="block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors" placeholder="you@example.com">
+                        <input id="email" name="email" type="email" autocomplete="email" value="{{ old('email') }}" required class="block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors" placeholder="you@example.com">
                     </div>
                 </div>
 
@@ -79,25 +93,29 @@
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i data-lucide="lock" class="h-5 w-5 text-slate-400"></i>
                         </div>
-                        <input id="password" name="password" type="password" autocomplete="current-password" required class="block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors" placeholder="••••••••">
+                        <input id="password" name="password" type="password" required class="block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors" placeholder="••••••••">
                     </div>
                 </div>
 
                 <div>
-                    <button type="submit" class="flex w-full justify-center rounded-md border border-transparent bg-brand-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all">
-                        Sign in
+                    <label for="password_confirmation" class="block text-sm font-medium text-slate-700">Confirm Password</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="check-circle" class="h-5 w-5 text-slate-400"></i>
+                        </div>
+                        <input id="password_confirmation" name="password_confirmation" type="password" required class="block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2 border focus:ring-brand-500 focus:border-brand-500 outline-none transition-colors" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="flex w-full justify-center rounded-md py-2 px-4 text-sm font-semibold btn-primary shadow-sm transition-all">
+                        Register
                     </button>
                 </div>
             </form>
             
             <div class="mt-6 text-center">
-                <p class="text-sm text-slate-600">Don't have an account? <a href="{{ route('register') }}" class="font-medium text-brand-600 hover:text-brand-500">Register here</a></p>
-            </div>
-            
-            <div class="mt-8 pt-6 border-t border-slate-100 text-center">
-                <a href="{{ route('admin.login') }}" class="text-xs font-medium text-slate-500 hover:text-slate-700 transition-colors flex items-center justify-center">
-                    <i data-lucide="shield-alert" class="h-4 w-4 mr-1"></i> Admin Access
-                </a>
+                <p class="text-sm text-slate-600">Already have an account? <a href="{{ route('login') }}" class="font-medium text-brand-600 hover:text-brand-500">Sign in</a></p>
             </div>
         </div>
     </div>

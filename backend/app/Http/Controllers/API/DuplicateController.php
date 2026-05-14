@@ -15,7 +15,7 @@ class DuplicateController extends Controller
 {
     public function index()
     {
-        $groups = DuplicateGroup::with('items')->orderBy('created_at', -1)->get()->map(function ($group) {
+        $groups = DuplicateGroup::where('user_id', request()->user()->id)->with('items')->orderBy('created_at', -1)->get()->map(function ($group) {
             $group->items_count = $group->items ? $group->items->count() : 0;
             return $group;
         });
@@ -24,7 +24,7 @@ class DuplicateController extends Controller
 
     public function show($id)
     {
-        $group = DuplicateGroup::with(['items.priceList'])->findOrFail($id);
+        $group = DuplicateGroup::where('user_id', request()->user()->id)->with(['items.priceList'])->findOrFail($id);
         return response()->json($group);
     }
 
@@ -34,52 +34,50 @@ class DuplicateController extends Controller
             'canonical_id' => 'required|exists:price_lists,id'
         ]);
 
-        $group = DuplicateGroup::findOrFail($id);
+        $group = DuplicateGroup::where('user_id', request()->user()->id)->findOrFail($id);
         
-        DB::transaction(function () use ($group, $request) {
-            $canonicalId = $request->canonical_id;
-            $items = DuplicateGroupItem::where('duplicate_group_id', $group->id)->get();
-            $mergedIds = [];
+        $canonicalId = $request->canonical_id;
+        $items = DuplicateGroupItem::where('duplicate_group_id', $group->id)->get();
+        $mergedIds = [];
 
-            foreach ($items as $item) {
-                $priceList = PriceList::find($item->price_list_id);
-                if ($priceList->id == $canonicalId) {
-                    $priceList->is_canonical = true;
-                    $priceList->status = 'active';
-                } else {
-                    $priceList->is_canonical = false;
-                    $priceList->status = 'merged';
-                    $priceList->duplicate_of_id = $canonicalId;
-                    $mergedIds[] = $priceList->id;
-                }
-                $priceList->save();
+        foreach ($items as $item) {
+            $priceList = PriceList::find($item->price_list_id);
+            if ($priceList->id == $canonicalId) {
+                $priceList->is_canonical = true;
+                $priceList->status = 'active';
+            } else {
+                $priceList->is_canonical = false;
+                $priceList->status = 'merged';
+                $priceList->duplicate_of_id = $canonicalId;
+                $mergedIds[] = $priceList->id;
             }
+            $priceList->save();
+        }
 
-            $group->status = 'resolved';
-            $group->save();
+        $group->status = 'resolved';
+        $group->save();
 
-            MergeLog::create([
-                'duplicate_group_id' => $group->id,
-                'canonical_price_list_id' => $canonicalId,
-                'merged_price_list_ids' => $mergedIds,
-                'merged_by' => $request->user()->id,
-                'notes' => 'Merged via Duplicate Review UI',
-            ]);
+        MergeLog::create([
+            'duplicate_group_id' => $group->id,
+            'canonical_price_list_id' => $canonicalId,
+            'merged_price_list_ids' => $mergedIds,
+            'merged_by' => $request->user()->id,
+            'notes' => 'Merged via Duplicate Review UI',
+        ]);
 
-            AuditLog::create([
-                'user_id' => $request->user()->id,
-                'action' => 'merge',
-                'description' => "Merged duplicate group {$group->group_code}",
-                'metadata' => ['group_id' => $group->id, 'canonical_id' => $canonicalId]
-            ]);
-        });
+        \App\Services\AuditLogger::log('duplicate_merged', 'deduplication', 'success', 'Duplicate group merged successfully', [
+            'duplicate_group_id' => (string) $group->id,
+            'group_code' => $group->group_code,
+            'canonical_price_list_id' => $canonicalId,
+            'merged_price_list_ids' => $mergedIds
+        ]);
 
         return response()->json(['message' => 'Merge successful']);
     }
 
     public function reject(Request $request, $id)
     {
-        $group = DuplicateGroup::findOrFail($id);
+        $group = DuplicateGroup::where('user_id', request()->user()->id)->findOrFail($id);
         
         $group->status = 'ignored';
         $group->save();
@@ -92,11 +90,9 @@ class DuplicateController extends Controller
             $priceList->save();
         }
 
-        AuditLog::create([
-            'user_id' => $request->user()->id,
-            'action' => 'reject',
-            'description' => "Rejected duplicate group {$group->group_code}",
-            'metadata' => ['group_id' => $group->id]
+        \App\Services\AuditLogger::log('duplicate_rejected', 'deduplication', 'success', 'Duplicate group rejected', [
+            'duplicate_group_id' => (string) $group->id,
+            'group_code' => $group->group_code
         ]);
 
         return response()->json(['message' => 'Duplicates rejected']);
@@ -104,7 +100,7 @@ class DuplicateController extends Controller
 
     public function needsReview(Request $request, $id)
     {
-        $group = DuplicateGroup::findOrFail($id);
+        $group = DuplicateGroup::where('user_id', request()->user()->id)->findOrFail($id);
         $group->status = 'pending';
         $group->save();
 

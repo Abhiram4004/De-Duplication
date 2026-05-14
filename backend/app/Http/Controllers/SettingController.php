@@ -34,6 +34,14 @@ class SettingController extends Controller
             'fuzzy_match_threshold' => $request->input('fuzzy_match_threshold', 85),
         ]);
 
-        return redirect()->route('settings.index')->with('success', 'Settings updated successfully.');
+        \App\Services\AuditLogger::log('settings_updated', 'settings', 'success', 'Deduplication settings updated', [
+            'ignore_hyphens' => $settings->ignore_hyphens,
+            'ignore_spaces' => $settings->ignore_spaces,
+            'ignore_special_characters' => $settings->ignore_special_characters,
+            'ignore_leading_zeros' => $settings->ignore_leading_zeros,
+            'fuzzy_match_threshold' => $settings->fuzzy_match_threshold
+        ]);
+
+        return redirect()->route('admin.settings.index')->with('success', 'Settings updated successfully.');
     }
 }

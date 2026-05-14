@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('breadcrumbs')
-    <a href="{{ route('duplicates.index') }}" class="hover:text-brand-600 flex items-center">
+    <a href="{{ route(auth()->user()->role === 'admin' ? 'admin.duplicates.index' : 'user.duplicates.index') }}" class="hover:text-brand-600 flex items-center">
         <i data-lucide="git-merge" class="h-4 w-4 mr-2"></i> Review Duplicates
     </a>
     <i data-lucide="chevron-right" class="h-4 w-4 mx-2 text-slate-300"></i>
@@ -20,7 +20,7 @@
     
     <div class="mt-4 sm:mt-0 flex gap-3">
         @if($group->status === 'pending')
-            <form action="{{ route('duplicates.reject', $group->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to reject this group? They will be marked as distinct records.');">
+            <form action="{{ route(auth()->user()->role === 'admin' ? 'admin.duplicates.reject' : 'user.duplicates.reject', $group->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to reject this group? They will be marked as distinct records.');">
                 @csrf
                 <button type="submit" class="inline-flex items-center rounded-md bg-white px-4 py-2 text-sm font-semibold text-red-600 shadow-sm ring-1 ring-inset ring-red-300 hover:bg-red-50 transition-colors">
                     <i data-lucide="x" class="h-4 w-4 mr-1.5"></i> Reject Group
@@ -37,7 +37,7 @@
     </div>
 </div>
 
-<form action="{{ route('duplicates.merge', $group->id) }}" method="POST" id="mergeForm">
+<form action="{{ route(auth()->user()->role === 'admin' ? 'admin.duplicates.merge' : 'user.duplicates.merge', $group->id) }}" method="POST" id="mergeForm">
     @csrf
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         @foreach($group->items as $item)

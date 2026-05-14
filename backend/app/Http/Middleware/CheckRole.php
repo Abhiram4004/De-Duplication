@@ -8,28 +8,30 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
-    public function handle(Request $request, Closure $next, ...$roles): Response
+    public function handle(Request $request, Closure $next, string $role): Response
     {
         if (!auth()->check()) {
-            return redirect('login');
+            return redirect()->route('login');
         }
 
-        $userRole = auth()->user()->role ?? 'viewer'; // Default to viewer if no role
+        $userRole = auth()->user()->role ?? 'user';
 
-        // Admin always has access to everything
-        if ($userRole === 'admin') {
+        // Check if the route is intended for admin but the user is not an admin
+        if ($role === 'admin' && $userRole !== 'admin') {
+            return redirect()->route('user.dashboard');
+        }
+
+        // Check if the route is intended for user but the user is an admin
+        if ($role === 'user' && $userRole === 'admin') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Proceed if roles match
+        if ($role === $userRole) {
             return $next($request);
         }
 
-        if (in_array($userRole, $roles)) {
-            return $next($request);
-        }
-
+        // Failsafe
         abort(403, 'Unauthorized action.');
     }
 }
